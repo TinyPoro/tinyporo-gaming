@@ -1297,6 +1297,7 @@
   const wgIsViWord = w => { const s = w.split(/\s+/).filter(Boolean); return s.length > 0 && s.every(wgIsViSyl); };
 
   // ── State ──
+  let wgDict     = null;     // Set of valid 2-syllable words (fetched once from server)
   let wgMode     = null;
   let wgPlayers  = [];       // [{nick, alive}]
   let wgCurrIdx  = 0;
@@ -1314,11 +1315,25 @@
   let wgMaxP     = 3;
   let wgLocalCnt = 2;
 
+  // ── Dictionary loader ──
+  async function wgLoadDict() {
+    if (wgDict !== null) return;
+    try {
+      const res  = await fetch('/api/wg/dict');
+      if (!res.ok) throw new Error();
+      const text = await res.text();
+      wgDict = new Set(text.split('\n').filter(Boolean));
+    } catch {
+      wgDict = new Set(); // empty = fall back to syllable-only check
+    }
+  }
+
   // ── Overlay ──
   function openWG() {
     $('wg-overlay').classList.add('open');
     document.body.style.overflow = 'hidden';
     showWGScreen('wg-screen-mode');
+    wgLoadDict(); // fetch in background, ready before first game turn
   }
   function closeWG() {
     $('wg-overlay').classList.remove('open');
@@ -1654,8 +1669,14 @@
 
   function wgValidateLocal(word){
     const syls=word.split(/\s+/).filter(Boolean);
-    if(!syls.length)                    return 'Từ không hợp lệ';
-    if(!wgIsViWord(word))               return 'Không phải từ tiếng Việt hợp lệ';
+    if(!syls.length)      return 'Từ không hợp lệ';
+    if(syls.length!==2)   return 'Từ phải có đúng 2 tiếng (VD: "học sinh", "bạn bè")';
+    // Dictionary check (when loaded) or syllable-structure fallback
+    if(wgDict&&wgDict.size>0){
+      if(!wgDict.has(word)) return 'Từ không có trong từ điển tiếng Việt';
+    } else if(!wgIsViWord(word)){
+      return 'Không phải từ tiếng Việt hợp lệ';
+    }
     if(wgLastSyl&&syls[0]!==wgLastSyl)  return `Phải bắt đầu bằng "${wgLastSyl}"`;
     if(wgUsed.has(word))                return 'Từ này đã được dùng rồi!';
     return null;
