@@ -346,6 +346,96 @@
       .mode-card { width: 160px; padding: 1.5rem 1rem; }
     }
 
+    /* ══════════════════════════════════════════════
+       WORD GAME (Nối Từ)
+    ══════════════════════════════════════════════ */
+    /* Card */
+    .card-thumb.wg-bg { background: linear-gradient(135deg, #0e1a30, #1a0d3e 55%, #0d2e1a); }
+    .wg-preview-chain { display:flex; align-items:center; gap:.35rem; flex-wrap:wrap; justify-content:center; padding:.5rem 1.2rem; }
+    .wg-bubble { padding:.2rem .65rem; background:rgba(124,111,255,.18); border:1px solid rgba(124,111,255,.35); border-radius:20px; font-size:.76rem; font-weight:600; color:var(--text); }
+    .wg-bubble.match { background:rgba(67,233,123,.15); border-color:rgba(67,233,123,.4); color:var(--green); }
+    .wg-arr-sm { color:var(--muted); font-size:.82rem; }
+    .tag-green { background:rgba(67,233,123,.15); border:1px solid rgba(67,233,123,.35); color:var(--green); }
+
+    /* Overlay root */
+    #wg-overlay { position:fixed; inset:0; z-index:200; background:var(--bg); display:flex; flex-direction:column; opacity:0; pointer-events:none; transition:opacity .25s; }
+    #wg-overlay.open { opacity:1; pointer-events:all; }
+
+    /* Count selector */
+    .wg-count-row { display:flex; gap:.5rem; margin-top:.45rem; }
+    .wg-count-btn { flex:1; padding:.5rem 0; background:var(--surface); border:1px solid var(--border); border-radius:10px; color:var(--muted); font-size:.95rem; font-weight:700; cursor:pointer; transition:all .15s; }
+    .wg-count-btn:hover  { background:rgba(124,111,255,.12); color:var(--purple); border-color:rgba(124,111,255,.3); }
+    .wg-count-btn.active { background:rgba(124,111,255,.2);  color:var(--purple); border-color:rgba(124,111,255,.55); }
+
+    /* Lobby player list */
+    .wg-lp { display:flex; align-items:center; gap:.55rem; padding:.4rem .7rem; background:var(--surface); border:1px solid var(--border); border-radius:10px; font-size:.88rem; font-weight:600; }
+    .wg-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+    .wg-host-lbl { font-size:.68rem; color:var(--muted); margin-left:auto; }
+
+    /* Game screen */
+    #wg-screen-game { overflow:hidden; }
+
+    /* Chain bar */
+    #wg-chain-bar { flex-shrink:0; display:flex; align-items:center; justify-content:center; gap:1.25rem; flex-wrap:wrap; padding:.8rem 1.5rem; background:rgba(0,0,0,.2); border-bottom:1px solid var(--border); }
+    .wg-cg { display:flex; flex-direction:column; align-items:center; gap:.18rem; }
+    .wg-cg-lbl { font-size:.65rem; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; font-weight:600; }
+    .wg-cg-word { font-size:1.05rem; font-weight:700; }
+    .wg-arr-big { font-size:1.25rem; color:var(--muted); }
+    .wg-syl-chip { padding:.28rem .85rem; background:rgba(67,233,123,.15); border:1px solid rgba(67,233,123,.45); border-radius:30px; color:var(--green); font-size:.95rem; font-weight:800; }
+    .wg-syl-chip.fresh { background:rgba(124,111,255,.15); border-color:rgba(124,111,255,.4); color:var(--purple); }
+
+    /* Players bar */
+    #wg-players-bar { flex-shrink:0; display:flex; gap:.45rem; padding:.55rem 1.5rem; flex-wrap:wrap; border-bottom:1px solid var(--border); }
+    .wg-pc { display:flex; align-items:center; gap:.35rem; padding:.28rem .8rem; background:var(--surface); border:2px solid var(--border); border-radius:20px; font-size:.8rem; font-weight:600; transition:border-color .2s, box-shadow .2s, opacity .2s; }
+    .wg-pc.cur  { border-color:var(--pc-col, var(--purple)); box-shadow:0 0 0 2px var(--pc-col, var(--purple)); }
+    .wg-pc.dead { opacity:.28; text-decoration:line-through; }
+
+    /* Turn / timer */
+    #wg-turn-area { flex-shrink:0; display:flex; align-items:center; justify-content:center; gap:1.5rem; padding:.65rem 1.5rem; }
+    #wg-turn-info { font-size:.92rem; font-weight:600; flex:1; max-width:200px; text-align:right; line-height:1.4; }
+    #wg-timer-wrap { position:relative; width:68px; height:68px; display:flex; align-items:center; justify-content:center; }
+    .wg-ring { position:absolute; inset:0; transform:rotate(-90deg); width:100%; height:100%; }
+    .wg-ring-bg { fill:none; stroke:rgba(255,255,255,.08); stroke-width:6; }
+    .wg-ring-fg { fill:none; stroke:var(--green); stroke-width:6; stroke-linecap:round; stroke-dasharray:213.6; stroke-dashoffset:0; transition:stroke .35s; }
+    #wg-timer-num { position:relative; font-size:1.35rem; font-weight:900; color:var(--text); z-index:1; }
+
+    /* Input */
+    #wg-input-area { flex-shrink:0; display:flex; gap:.5rem; padding:.55rem 1.5rem; align-items:center; }
+    .wg-input { flex:1; padding:.65rem 1rem; background:var(--surface); border:1px solid var(--border); border-radius:12px; color:var(--text); font-size:1rem; outline:none; transition:border-color .15s; }
+    .wg-input:focus { border-color:rgba(124,111,255,.5); }
+    .wg-input:disabled { opacity:.35; cursor:not-allowed; }
+    .wg-send { padding:.65rem 1.1rem; background:linear-gradient(135deg,var(--purple),var(--pink)); border:none; border-radius:12px; color:white; font-size:.9rem; font-weight:700; cursor:pointer; white-space:nowrap; transition:opacity .2s,transform .1s; box-shadow:0 3px 12px rgba(124,111,255,.35); }
+    .wg-send:hover { opacity:.88; transform:translateY(-1px); }
+    .wg-send:disabled { opacity:.28; cursor:not-allowed; transform:none; }
+    .wg-skip { padding:.65rem .9rem; background:var(--surface); border:1px solid var(--border); border-radius:12px; color:var(--muted); font-size:.85rem; font-weight:600; cursor:pointer; white-space:nowrap; transition:background .15s; }
+    .wg-skip:hover { background:rgba(255,255,255,.08); color:var(--pink); border-color:rgba(255,107,157,.3); }
+
+    /* Error + history */
+    #wg-err { flex-shrink:0; margin:.1rem 1.5rem; padding:.5rem 1rem; background:rgba(255,107,157,.1); border:1px solid rgba(255,107,157,.3); border-radius:10px; color:var(--pink); font-size:.85rem; text-align:center; }
+    .wg-hist { flex:1; overflow-y:auto; padding:.6rem 1.5rem; display:flex; flex-direction:column; gap:.25rem; }
+    .wg-he { display:flex; gap:.55rem; align-items:baseline; padding:.3rem .45rem; border-radius:7px; font-size:.87rem; animation:fadeInUp .18s ease; }
+    .wg-he:hover { background:rgba(255,255,255,.03); }
+    .wg-he-nick { font-weight:700; min-width:68px; flex-shrink:0; }
+    .wg-he-word strong { }
+    .wg-he-elim { font-style:italic; color:var(--muted); }
+    .wg-gameover { margin:.75rem 1.5rem; padding:1.1rem; background:linear-gradient(135deg,rgba(124,111,255,.12),rgba(255,107,157,.12)); border:1px solid rgba(124,111,255,.28); border-radius:16px; text-align:center; }
+    .wg-gameover h3 { font-size:1.15rem; font-weight:800; margin-bottom:.35rem; }
+    .wg-gameover p  { font-size:.85rem; color:var(--muted); }
+    .wg-replay-btn { display:block; margin:.75rem 1.5rem 1rem; padding:.7rem; background:linear-gradient(135deg,var(--purple),var(--pink)); border:none; border-radius:12px; color:white; font-size:.9rem; font-weight:700; cursor:pointer; transition:opacity .2s; box-shadow:0 3px 12px rgba(124,111,255,.3); }
+    .wg-replay-btn:hover { opacity:.88; }
+
+    @media (max-width:600px) {
+      #wg-chain-bar { padding:.55rem .9rem; gap:.6rem; }
+      .wg-cg-word { font-size:.9rem; }
+      #wg-players-bar { padding:.45rem .9rem; gap:.3rem; }
+      .wg-pc { padding:.22rem .6rem; font-size:.75rem; }
+      #wg-input-area { padding:.45rem .75rem; gap:.4rem; }
+      .wg-input { padding:.6rem .75rem; }
+      .wg-send, .wg-skip { padding:.6rem .75rem; font-size:.8rem; }
+      .wg-hist { padding:.5rem .9rem; }
+      #wg-turn-area { gap:.75rem; padding:.5rem .9rem; }
+    }
+
     /* ── Animations ── */
     @keyframes fadeInDown { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
     @keyframes fadeInUp   { from { opacity:0; transform:translateY(16px);  } to { opacity:1; transform:translateY(0); } }
@@ -375,10 +465,10 @@
 <main>
   <section class="hero">
     <div class="hero-badge">✨ Chơi miễn phí · Không cần tải</div>
-    <h1>Chào mừng đến<br>Game Zone</h1>
+    <h1>Chào mừng đến<br>Game Zone của Tuấn Nam Vương</h1>
     <p>Bộ sưu tập trò chơi cổ điển ngay trên trình duyệt. Thách đấu bạn bè ngay hôm nay!</p>
     <div class="hero-stats">
-      <div class="stat"><div class="stat-num">1</div><div class="stat-label">Trò chơi</div></div>
+      <div class="stat"><div class="stat-num">2</div><div class="stat-label">Trò chơi</div></div>
       <div class="stat"><div class="stat-num">2</div><div class="stat-label">Người chơi</div></div>
       <div class="stat"><div class="stat-num">∞</div><div class="stat-label">Niềm vui</div></div>
     </div>
@@ -405,6 +495,28 @@
           <p>Đặt 5 quân liên tiếp để thắng. Hỗ trợ chơi cùng máy hoặc qua mạng WiFi!</p>
           <div class="card-tags">
             <span class="tag tag-purple">2 người chơi</span>
+            <span class="tag tag-purple">WiFi LAN</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Nối Từ -->
+      <div class="game-card" onclick="openWG()" role="button" tabindex="0" onkeydown="if(event.key==='Enter')openWG()">
+        <div class="card-thumb wg-bg">
+          <div class="wg-preview-chain">
+            <span class="wg-bubble">học sinh</span>
+            <span class="wg-arr-sm">→</span>
+            <span class="wg-bubble match">sinh viên</span>
+            <span class="wg-arr-sm">→</span>
+            <span class="wg-bubble match">viên gạch</span>
+          </div>
+          <div class="card-play-overlay"><div class="play-icon">▶</div></div>
+        </div>
+        <div class="card-body">
+          <h3>Nối Từ</h3>
+          <p>Nối tiếp âm tiết cuối thành từ mới. 2–4 người, hỗ trợ WiFi LAN!</p>
+          <div class="card-tags">
+            <span class="tag tag-green">2–4 người</span>
             <span class="tag tag-purple">WiFi LAN</span>
           </div>
         </div>
@@ -556,6 +668,147 @@
 
   </div><!-- #caro-wrap -->
 </div><!-- #game-overlay -->
+
+<!-- ═══ WORD GAME OVERLAY ═══ -->
+<div id="wg-overlay" role="dialog" aria-modal="true">
+
+  <div class="overlay-nav">
+    <button class="back-btn" onclick="wgHandleBack()">← Quay lại</button>
+    <span class="overlay-title" id="wg-title">Nối Từ 🔤</span>
+  </div>
+
+  <!-- Screen: mode -->
+  <div id="wg-screen-mode" class="ov-screen active" style="flex-direction:column;align-items:center;justify-content:center;gap:.75rem;padding:2rem 1.5rem;">
+    <div class="screen-title">Nối Từ 🔤</div>
+    <div class="screen-sub">Chọn cách chơi</div>
+    <div class="mode-cards">
+      <div class="mode-card" onclick="wgShowLocalSetup()">
+        <div class="mode-icon">🖥️</div>
+        <h3>Cùng một máy</h3>
+        <p>2–4 người luân phiên trên cùng thiết bị</p>
+      </div>
+      <div class="mode-card" onclick="wgShowOnlineLobby()">
+        <div class="mode-icon">📡</div>
+        <h3>Qua mạng WiFi</h3>
+        <p>Mỗi người một thiết bị, kết nối cùng WiFi</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Screen: local setup -->
+  <div id="wg-screen-local" class="ov-screen" style="flex-direction:column;align-items:center;justify-content:center;padding:2rem 1.5rem;">
+    <div class="lobby-wrap">
+      <button class="back-to-mode" onclick="showWGScreen('wg-screen-mode')">← Chọn lại</button>
+      <div class="screen-title" style="font-size:1.2rem;">Thiết lập trò chơi</div>
+      <div>
+        <div class="nick-label">Số người chơi</div>
+        <div class="wg-count-row">
+          <button class="wg-count-btn active" data-val="2" onclick="wgSelectCount(2)">2</button>
+          <button class="wg-count-btn"        data-val="3" onclick="wgSelectCount(3)">3</button>
+          <button class="wg-count-btn"        data-val="4" onclick="wgSelectCount(4)">4</button>
+        </div>
+      </div>
+      <div id="wg-local-names" style="display:flex;flex-direction:column;gap:.55rem;"></div>
+      <button class="lobby-create-btn" onclick="wgStartLocal()">▶ &nbsp;Bắt đầu chơi</button>
+      <div id="wg-local-err" class="lobby-error" style="display:none;"></div>
+    </div>
+  </div>
+
+  <!-- Screen: online lobby -->
+  <div id="wg-screen-lobby" class="ov-screen" style="flex-direction:column;align-items:center;justify-content:center;padding:2rem 1.5rem;">
+    <div class="lobby-wrap">
+      <button class="back-to-mode" onclick="showWGScreen('wg-screen-mode')">← Chọn lại</button>
+
+      <div id="wg-lobby-forms">
+        <div style="display:flex;flex-direction:column;gap:.9rem;">
+          <div>
+            <label class="nick-label" for="wg-nick">Tên của bạn</label>
+            <input id="wg-nick" class="nick-input" placeholder="VD: Tuấn, An, Minh..." maxlength="20"
+                   onkeydown="if(event.key==='Enter')wgCreateRoom()">
+          </div>
+          <div>
+            <div class="nick-label">Số người tối đa (khi tạo phòng)</div>
+            <div class="wg-count-row">
+              <button class="wg-count-btn"       data-val="2" onclick="wgSetMax(2)">2</button>
+              <button class="wg-count-btn active" data-val="3" onclick="wgSetMax(3)">3</button>
+              <button class="wg-count-btn"       data-val="4" onclick="wgSetMax(4)">4</button>
+            </div>
+          </div>
+          <div class="lobby-sep"></div>
+          <button class="lobby-create-btn" onclick="wgCreateRoom()">➕ &nbsp;Tạo phòng mới</button>
+          <div class="lobby-divider">hoặc vào phòng có sẵn</div>
+          <div class="lobby-join-row">
+            <input id="wg-code-in" class="code-input" placeholder="Mã phòng" maxlength="4"
+                   onkeydown="if(event.key==='Enter')wgJoinRoom()">
+            <button class="join-btn" onclick="wgJoinRoom()">Vào →</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="wg-lobby-wait" style="display:none;">
+        <div class="waiting-box">
+          <div class="waiting-hint">Mã phòng — chia sẻ cho bạn bè:</div>
+          <div class="room-code-row">
+            <span class="room-code-big" id="wg-code-disp">----</span>
+            <button class="copy-btn" id="wg-copy-btn" onclick="wgCopyCode()">📋</button>
+          </div>
+          <div id="wg-lobby-plist" style="display:flex;flex-direction:column;gap:.4rem;margin:.65rem 0;"></div>
+          <button id="wg-start-btn" class="lobby-create-btn" style="display:none;" onclick="wgStartOnline()">▶ Bắt đầu chơi</button>
+          <div id="wg-wait-anim" class="waiting-anim">
+            Chờ người chơi khác
+            <span class="dot-pulse"><span></span><span></span><span></span></span>
+          </div>
+        </div>
+      </div>
+
+      <div id="wg-lobby-err" class="lobby-error" style="display:none;"></div>
+    </div>
+  </div>
+
+  <!-- Screen: game -->
+  <div id="wg-screen-game" class="ov-screen" style="flex-direction:column;overflow:hidden;">
+
+    <div id="wg-chain-bar">
+      <div class="wg-cg">
+        <div class="wg-cg-lbl">Từ trước</div>
+        <div class="wg-cg-word" id="wg-last-word">—</div>
+      </div>
+      <div class="wg-arr-big">→</div>
+      <div class="wg-cg">
+        <div class="wg-cg-lbl">Phải bắt đầu bằng</div>
+        <div class="wg-syl-chip fresh" id="wg-req-syl">Từ đầu tiên</div>
+      </div>
+    </div>
+
+    <div id="wg-players-bar"></div>
+
+    <div id="wg-turn-area">
+      <div id="wg-turn-info"></div>
+      <div id="wg-timer-wrap">
+        <svg class="wg-ring" viewBox="0 0 80 80">
+          <circle class="wg-ring-bg" cx="40" cy="40" r="34"/>
+          <circle class="wg-ring-fg" id="wg-ring-fg" cx="40" cy="40" r="34"/>
+        </svg>
+        <span id="wg-timer-num">30</span>
+      </div>
+    </div>
+
+    <div id="wg-input-area">
+      <input id="wg-word-in" class="wg-input" type="text"
+             placeholder="Nhập từ tiếp theo..."
+             autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+             onkeydown="if(event.key==='Enter')wgSubmit()">
+      <button id="wg-send-btn" class="wg-send" onclick="wgSubmit()">Gửi</button>
+      <button class="wg-skip" onclick="wgPass()">Bỏ qua</button>
+    </div>
+
+    <div id="wg-err" style="display:none;"></div>
+
+    <div id="wg-hist" class="wg-hist"></div>
+
+  </div>
+
+</div><!-- #wg-overlay -->
 
 <script>
   // ── Constants ──────────────────────────────────────────────────────────
@@ -1024,8 +1277,441 @@
   });
 
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') closeGame();
+    if (e.key === 'Escape') { closeGame(); closeWG(); }
   });
+
+  // ════════════════════════════════════════════════════════
+  //  WORD GAME (Nối Từ)
+  // ════════════════════════════════════════════════════════
+  const WG_COLORS = ['#7c6fff','#ff6b9d','#00d4ff','#43e97b'];
+  const WG_CIRC   = 2 * Math.PI * 34; // ≈ 213.6
+
+  // ── State ──
+  let wgMode     = null;
+  let wgPlayers  = [];       // [{nick, alive}]
+  let wgCurrIdx  = 0;
+  let wgLastWord = null;
+  let wgLastSyl  = null;
+  let wgUsed     = new Set();
+  let wgDeadline = null;
+  let wgRafId    = null;
+  let wgPhase    = 'idle';
+  let wgMyIdx    = -1;
+  let wgIsHost   = false;
+  let wgRoomCode = null;
+  let wgMyToken  = null;
+  let wgEvtSrc   = null;
+  let wgMaxP     = 3;
+  let wgLocalCnt = 2;
+
+  // ── Overlay ──
+  function openWG() {
+    $('wg-overlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    showWGScreen('wg-screen-mode');
+  }
+  function closeWG() {
+    $('wg-overlay').classList.remove('open');
+    document.body.style.overflow = '';
+    wgCleanup();
+  }
+  function wgHandleBack() {
+    const active = $('wg-overlay').querySelector('.ov-screen.active');
+    const id = active?.id;
+    if (!id || id === 'wg-screen-mode') closeWG();
+    else if (id === 'wg-screen-game' && wgPhase === 'playing') {
+      if (confirm('Rời khỏi trò chơi đang diễn ra?')) closeWG();
+    } else showWGScreen('wg-screen-mode');
+  }
+  function showWGScreen(id) {
+    ['wg-screen-mode','wg-screen-local','wg-screen-lobby','wg-screen-game'].forEach(s => {
+      const el = $(s); if (el) el.classList.toggle('active', s === id);
+    });
+  }
+
+  // ── Local setup ──
+  function wgShowLocalSetup() {
+    wgLocalCnt = 2;
+    showWGScreen('wg-screen-local');
+    wgSyncCountBtns('wg-screen-local', 2);
+    wgRenderLocalNames(2);
+  }
+  function wgSelectCount(n) {
+    wgLocalCnt = n;
+    wgSyncCountBtns('wg-screen-local', n);
+    wgRenderLocalNames(n);
+  }
+  function wgSyncCountBtns(screenId, val) {
+    $(screenId).querySelectorAll('.wg-count-btn').forEach(b => {
+      b.classList.toggle('active', +b.dataset.val === val);
+    });
+  }
+  function wgRenderLocalNames(n) {
+    const wrap = $('wg-local-names'); wrap.innerHTML = '';
+    for (let i = 0; i < n; i++) {
+      const d = document.createElement('div');
+      d.innerHTML = `<label class="nick-label">Người chơi ${i+1}</label>
+        <input id="wg-lp${i}" class="nick-input" placeholder="Nhập tên..." maxlength="20"
+               onkeydown="if(event.key==='Enter')wgStartLocal()">`;
+      wrap.appendChild(d);
+    }
+    $('wg-lp0')?.focus();
+  }
+  function wgStartLocal() {
+    const players = [];
+    for (let i = 0; i < wgLocalCnt; i++) {
+      const nick = ($(`wg-lp${i}`)?.value || '').trim() || `Người ${i+1}`;
+      players.push({ nick, alive: true });
+    }
+    const names = players.map(p => p.nick);
+    if (new Set(names).size < names.length) {
+      const el = $('wg-local-err'); el.textContent = 'Tên không được trùng nhau!'; el.style.display = 'block'; return;
+    }
+    $('wg-local-err').style.display = 'none';
+    wgMode = 'local'; wgPlayers = players; wgMyIdx = -1;
+    wgInitGame();
+  }
+
+  // ── Online lobby ──
+  function wgShowOnlineLobby() {
+    showWGScreen('wg-screen-lobby');
+    $('wg-lobby-forms').style.display = 'block';
+    $('wg-lobby-wait').style.display  = 'none';
+    $('wg-lobby-err').style.display   = 'none';
+    $('wg-code-in').value = '';
+    setTimeout(() => $('wg-nick')?.focus(), 80);
+  }
+  function wgSetMax(n) {
+    wgMaxP = n;
+    wgSyncCountBtns('wg-screen-lobby', n);
+  }
+
+  async function wgCreateRoom() {
+    wgHideLobbyErr();
+    const nick = ($('wg-nick')?.value || '').trim();
+    try {
+      const res  = await fetch('/api/wg/room', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ nickname: nick, maxPlayers: wgMaxP }),
+      });
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      wgMode = 'online'; wgMyIdx = 0; wgIsHost = true;
+      wgMyToken = data.token; wgRoomCode = data.code;
+      wgPlayers = [{ nick: nick || 'Người chơi', alive: true }];
+      sessionStorage.setItem('wg-t-' + data.code, data.token);
+      $('wg-code-disp').textContent = data.code;
+      $('wg-lobby-forms').style.display = 'none';
+      $('wg-lobby-wait').style.display  = 'block';
+      $('wg-start-btn').style.display   = 'none';
+      wgRenderLobbyList();
+      wgSetupSSE();
+    } catch { wgShowLobbyErr('Không thể kết nối server. Hãy chạy: node server.js'); }
+  }
+
+  async function wgJoinRoom() {
+    wgHideLobbyErr();
+    const code = ($('wg-code-in')?.value || '').trim().toUpperCase();
+    if (code.length !== 4) { wgShowLobbyErr('Mã phòng phải đủ 4 ký tự'); return; }
+    const nick  = ($('wg-nick')?.value || '').trim();
+    const saved = sessionStorage.getItem('wg-t-' + code);
+    try {
+      const res = await fetch('/api/wg/room/' + code, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ nickname: nick, token: saved || undefined }),
+      });
+      if (res.status === 404) { wgShowLobbyErr('Không tìm thấy phòng. Kiểm tra lại mã!'); return; }
+      if (!res.ok) { const e = await res.json().catch(()=>({})); wgShowLobbyErr(e.error || 'Không thể vào phòng'); return; }
+      const data = await res.json();
+      wgMode = 'online'; wgMyIdx = data.playerIdx; wgIsHost = (data.playerIdx === 0);
+      wgMyToken = data.token; wgRoomCode = code;
+      wgPlayers = (data.players || []).map(p => ({ nick: p.nick, alive: p.alive }));
+      if (data.token) sessionStorage.setItem('wg-t-' + code, data.token);
+      $('wg-code-disp').textContent = code;
+      $('wg-lobby-forms').style.display = 'none';
+      $('wg-lobby-wait').style.display  = 'block';
+      wgRenderLobbyList();
+      wgSetupSSE();
+      if (data.phase === 'playing') {
+        // Rejoin mid-game
+        wgLastSyl  = data.lastSyl || null;
+        wgLastWord = data.words?.slice(-1)[0]?.word || null;
+        wgCurrIdx  = data.currIdx ?? 0;
+        wgDeadline = data.deadline;
+        wgUsed     = new Set((data.words || []).map(w => w.word));
+        wgPhase    = 'playing';
+        showWGScreen('wg-screen-game');
+        wgInitGameUI();
+        (data.words || []).forEach(w => wgPushHistory(w.playerIdx, w.word, false));
+        wgRenderPlayers(); wgStartCountdown();
+      } else if (wgIsHost && wgPlayers.length >= 2) {
+        $('wg-start-btn').style.display = 'block';
+        $('wg-wait-anim').style.display = 'none';
+      }
+    } catch { wgShowLobbyErr('Lỗi kết nối. Kiểm tra server đang chạy!'); }
+  }
+
+  function wgShowLobbyErr(msg) { const e=$('wg-lobby-err'); e.textContent=msg; e.style.display='block'; }
+  function wgHideLobbyErr() { $('wg-lobby-err').style.display='none'; }
+
+  function wgCopyCode() {
+    const text=wgRoomCode, btn=$('wg-copy-btn');
+    const done=()=>{ btn.textContent='✅'; setTimeout(()=>{ btn.textContent='📋'; },2000); };
+    const fb=()=>{ const ta=document.createElement('textarea'); ta.value=text; ta.style.cssText='position:fixed;left:-9999px;opacity:0'; document.body.appendChild(ta); ta.focus(); ta.select(); try{ document.execCommand('copy'); done(); }catch{} document.body.removeChild(ta); };
+    if (navigator.clipboard?.writeText) navigator.clipboard.writeText(text).then(done).catch(fb); else fb();
+  }
+
+  function wgRenderLobbyList() {
+    const wrap = $('wg-lobby-plist'); if (!wrap) return;
+    wrap.innerHTML = '';
+    wgPlayers.forEach((p, i) => {
+      const d = document.createElement('div'); d.className = 'wg-lp';
+      d.innerHTML = `<span class="wg-dot" style="background:${WG_COLORS[i]}"></span>
+        <span>${p.nick}</span>${i===0?'<span class="wg-host-lbl">chủ phòng</span>':''}`;
+      wrap.appendChild(d);
+    });
+    const ready = wgIsHost && wgPlayers.length >= 2;
+    $('wg-start-btn').style.display = ready ? 'block' : 'none';
+    $('wg-wait-anim').style.display = ready ? 'none'  : 'flex';
+  }
+
+  async function wgStartOnline() {
+    try {
+      const res = await fetch('/api/wg/start/' + wgRoomCode, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ token: wgMyToken }),
+      });
+      if (!res.ok) { const e=await res.json().catch(()=>({})); wgShowLobbyErr(e.error||'Không thể bắt đầu'); }
+    } catch { wgShowLobbyErr('Lỗi kết nối!'); }
+  }
+
+  // ── SSE ──
+  function wgSetupSSE() {
+    if (wgEvtSrc) wgEvtSrc.close();
+    wgEvtSrc = new EventSource('/api/wg/events/' + wgRoomCode + '?token=' + (wgMyToken||'spec'));
+    wgEvtSrc.onmessage = e => wgHandleSSE(JSON.parse(e.data));
+  }
+
+  function wgHandleSSE(data) {
+    if (data.type === 'wg:playerJoined') {
+      wgPlayers = (data.players||[]).map(p=>({nick:p.nick,alive:p.alive}));
+      wgRenderLobbyList(); return;
+    }
+    if (data.type === 'wg:start') {
+      wgPlayers  = (data.players||[]).map(p=>({nick:p.nick,alive:p.alive}));
+      wgCurrIdx  = data.currIdx; wgDeadline = data.deadline;
+      wgLastWord = null; wgLastSyl = null; wgUsed = new Set(); wgPhase = 'playing';
+      showWGScreen('wg-screen-game'); wgInitGameUI(); wgStartCountdown(); return;
+    }
+    if (data.type === 'wg:word') {
+      wgLastWord = data.word; wgLastSyl = data.lastSyl;
+      wgUsed.add(data.word); wgCurrIdx = data.currIdx; wgDeadline = data.deadline;
+      wgUpdateChainBar(); wgPushHistory(data.playerIdx, data.word, true);
+      wgRenderPlayers(); wgStartCountdown(); return;
+    }
+    if (data.type === 'wg:eliminated') {
+      if (data.playerIdx >= 0) wgPlayers[data.playerIdx].alive = false;
+      wgPushHistoryElim(data.playerIdx, data.reason);
+      if (data.gameOver) {
+        wgPhase = 'finished'; wgStopCountdown();
+        wgRenderPlayers(); wgShowGameOver(data.winnerIdx, data.winnerNick);
+      } else {
+        wgCurrIdx = data.currIdx; wgDeadline = data.deadline;
+        wgRenderPlayers(); wgStartCountdown();
+      }
+    }
+  }
+
+  // ── Game init ──
+  function wgInitGame() {
+    wgCurrIdx=0; wgLastWord=null; wgLastSyl=null; wgUsed=new Set();
+    wgPhase='playing'; wgDeadline=Date.now()+30_000;
+    showWGScreen('wg-screen-game');
+    wgInitGameUI(); wgStartCountdown();
+  }
+  function wgInitGameUI() {
+    const h=$('wg-hist'); if(h) h.innerHTML='';
+    document.querySelectorAll('.wg-gameover,.wg-replay-btn').forEach(e=>e.remove());
+    const err=$('wg-err'); if(err) err.style.display='none';
+    wgUpdateChainBar(); wgRenderPlayers(); wgSetInput(true);
+    $('wg-word-in')?.focus();
+  }
+
+  // ── Players UI ──
+  function wgRenderPlayers() {
+    const bar=$('wg-players-bar'); if(!bar) return;
+    bar.innerHTML='';
+    wgPlayers.forEach((p,i)=>{
+      const c=document.createElement('div');
+      c.className='wg-pc'+(i===wgCurrIdx&&p.alive?' cur':'')+(p.alive?'':' dead');
+      c.style.setProperty('--pc-col', WG_COLORS[i]);
+      c.innerHTML=`<span class="wg-dot" style="background:${WG_COLORS[i]}"></span>${p.nick}`;
+      bar.appendChild(c);
+    });
+    const info=$('wg-turn-info'); if(!info) return;
+    if (wgPhase==='finished') { info.textContent=''; return; }
+    const cur=wgPlayers[wgCurrIdx]; if(!cur) return;
+    const myTurn = wgMode==='local' || wgCurrIdx===wgMyIdx;
+    info.innerHTML = myTurn
+      ? `<span style="color:${WG_COLORS[wgCurrIdx]};font-weight:800">Đến lượt bạn!</span>`
+      : `<span style="color:${WG_COLORS[wgCurrIdx]}">Chờ ${cur.nick}...</span>`;
+    wgSetInput(myTurn && wgPhase==='playing');
+  }
+
+  function wgSetInput(on) {
+    const inp=$('wg-word-in'), btn=$('wg-send-btn');
+    if(inp){ inp.disabled=!on; if(on) inp.focus(); }
+    if(btn) btn.disabled=!on;
+  }
+
+  // ── Chain bar ──
+  function wgUpdateChainBar() {
+    const lw=$('wg-last-word'), rs=$('wg-req-syl'); if(!lw||!rs) return;
+    if (wgLastWord) {
+      lw.textContent=wgLastWord; rs.textContent=wgLastSyl||'?'; rs.className='wg-syl-chip';
+    } else {
+      lw.textContent='—'; rs.textContent='Từ đầu tiên'; rs.className='wg-syl-chip fresh';
+    }
+  }
+
+  // ── Timer ──
+  function wgStartCountdown() {
+    wgStopCountdown();
+    const ring=$('wg-ring-fg'), num=$('wg-timer-num');
+    const tick=()=>{
+      const s=Math.max(0,(wgDeadline-Date.now())/1000);
+      if(ring) ring.style.strokeDashoffset=String(WG_CIRC*(1-s/30));
+      if(num)  num.textContent=String(Math.ceil(s));
+      const col = s>15?'#43e97b':s>8?'#ffd700':'#ff6b9d';
+      if(ring) ring.style.stroke=col;
+      if(num)  num.style.color=s<=8?'#ff6b9d':'';
+      if(s<=0){ if(wgMode==='local') wgLocalTimeout(); return; }
+      wgRafId=requestAnimationFrame(tick);
+    };
+    wgRafId=requestAnimationFrame(tick);
+  }
+  function wgStopCountdown(){ if(wgRafId){ cancelAnimationFrame(wgRafId); wgRafId=null; } }
+
+  // ── Local timeout ──
+  function wgLocalTimeout(){
+    if(wgPhase!=='playing') return;
+    const idx=wgCurrIdx; wgPlayers[idx].alive=false;
+    wgPushHistoryElim(idx,'timeout');
+    const alive=wgPlayers.filter(p=>p.alive);
+    if(alive.length<=1){ wgLocalEnd(alive[0]?wgPlayers.indexOf(alive[0]):-1); return; }
+    wgCurrIdx=wgNextAlive(idx); wgDeadline=Date.now()+30_000;
+    wgRenderPlayers(); wgStartCountdown();
+  }
+  function wgNextAlive(from){
+    const n=wgPlayers.length;
+    for(let i=1;i<=n;i++){ const idx=(from+i)%n; if(wgPlayers[idx].alive) return idx; }
+    return -1;
+  }
+  function wgLocalEnd(winnerIdx){ wgPhase='finished'; wgStopCountdown(); wgRenderPlayers(); wgShowGameOver(winnerIdx,wgPlayers[winnerIdx]?.nick||null); }
+
+  // ── Submit / pass ──
+  async function wgSubmit(){
+    if(wgPhase!=='playing') return;
+    const inp=$('wg-word-in');
+    const raw=(inp?.value||'').trim();
+    if(!raw) return;
+    const word=raw.normalize('NFC').toLowerCase().split(/\s+/).filter(Boolean).join(' ');
+
+    if(wgMode==='local'){
+      const err=wgValidateLocal(word);
+      if(err){ wgShowErr(err); return; }
+      wgApplyWordLocal(word); inp.value=''; inp.focus();
+    } else {
+      if(wgCurrIdx!==wgMyIdx) return;
+      try{
+        const res=await fetch('/api/wg/word/'+wgRoomCode,{
+          method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({token:wgMyToken,word}),
+        });
+        if(res.ok){ inp.value=''; }
+        else{ const d=await res.json().catch(()=>({})); wgShowErr(d.error||'Từ không hợp lệ'); }
+      } catch{ wgShowErr('Lỗi kết nối!'); }
+    }
+  }
+
+  async function wgPass(){
+    if(wgPhase!=='playing') return;
+    if(!confirm('Bỏ qua lượt sẽ bị loại khỏi trò chơi. Tiếp tục?')) return;
+    if(wgMode==='local'){ wgLocalTimeout(); return; }
+    if(wgCurrIdx!==wgMyIdx) return;
+    fetch('/api/wg/pass/'+wgRoomCode,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:wgMyToken})}).catch(()=>{});
+  }
+
+  function wgValidateLocal(word){
+    const syls=word.split(/\s+/).filter(Boolean);
+    if(!syls.length)                    return 'Từ không hợp lệ';
+    if(wgLastSyl&&syls[0]!==wgLastSyl)  return `Phải bắt đầu bằng "${wgLastSyl}"`;
+    if(wgUsed.has(word))                return 'Từ này đã được dùng rồi!';
+    return null;
+  }
+
+  function wgApplyWordLocal(word){
+    const syls=word.split(/\s+/).filter(Boolean);
+    wgUsed.add(word); wgPushHistory(wgCurrIdx,word,true);
+    wgLastWord=word; wgLastSyl=syls[syls.length-1];
+    wgUpdateChainBar(); wgHideErr();
+    wgCurrIdx=wgNextAlive(wgCurrIdx); wgDeadline=Date.now()+30_000;
+    wgRenderPlayers(); wgStartCountdown();
+  }
+
+  // ── History ──
+  function wgPushHistory(pIdx, word, scroll){
+    const h=$('wg-hist'); if(!h) return;
+    const col=WG_COLORS[pIdx]||'#888', p=wgPlayers[pIdx];
+    const syls=word.split(/\s+/).filter(Boolean);
+    const last=syls.pop(); const rest=syls.length?syls.join(' ')+' ':'';
+    const d=document.createElement('div'); d.className='wg-he';
+    d.innerHTML=`<span class="wg-he-nick" style="color:${col}">${p?.nick||'?'}</span>
+      <span class="wg-he-word">${rest}<strong>${last}</strong></span>`;
+    h.appendChild(d); if(scroll) h.scrollTop=h.scrollHeight;
+  }
+  function wgPushHistoryElim(pIdx, reason){
+    const h=$('wg-hist'); if(!h) return;
+    const col=WG_COLORS[pIdx]||'#888', p=wgPlayers[pIdx];
+    const msg=reason==='timeout'?'hết giờ ⏱️':'bỏ qua 🏳️';
+    const d=document.createElement('div'); d.className='wg-he wg-he-elim';
+    d.innerHTML=`<span class="wg-he-nick" style="color:${col}">${p?.nick||'?'}</span><span>bị loại (${msg})</span>`;
+    h.appendChild(d); h.scrollTop=h.scrollHeight;
+  }
+
+  // ── Error ──
+  function wgShowErr(msg){
+    const e=$('wg-err'); if(!e) return; e.textContent=msg; e.style.display='block';
+    clearTimeout(wgShowErr._t); wgShowErr._t=setTimeout(wgHideErr,3000);
+  }
+  function wgHideErr(){ const e=$('wg-err'); if(e) e.style.display='none'; }
+
+  // ── Game over ──
+  function wgShowGameOver(winnerIdx, winnerNick){
+    wgSetInput(false);
+    const h=$('wg-hist'); if(!h) return;
+    const ov=document.createElement('div'); ov.className='wg-gameover';
+    if(winnerIdx>=0&&winnerNick){
+      const col=WG_COLORS[winnerIdx]||'#888';
+      ov.innerHTML=`<h3>🏆 <span style="color:${col}">${winnerNick}</span> thắng!</h3>
+        <p>Đã nối được ${wgUsed.size} từ trong ván này.</p>`;
+    } else {
+      ov.innerHTML=`<h3>🤝 Hòa!</h3><p>Đã nối được ${wgUsed.size} từ.</p>`;
+    }
+    h.appendChild(ov);
+    const btn=document.createElement('button'); btn.className='wg-replay-btn'; btn.textContent='↺ Chơi lại';
+    btn.onclick=()=>{ if(wgMode==='local') wgShowLocalSetup(); else { wgCleanup(); wgShowOnlineLobby(); } };
+    h.appendChild(btn); h.scrollTop=h.scrollHeight;
+  }
+
+  // ── Cleanup ──
+  function wgCleanup(){
+    wgStopCountdown();
+    if(wgEvtSrc){ wgEvtSrc.close(); wgEvtSrc=null; }
+    wgMode=null; wgPlayers=[]; wgMyIdx=-1; wgIsHost=false;
+    wgRoomCode=null; wgMyToken=null; wgLastWord=null; wgLastSyl=null;
+    wgUsed=new Set(); wgPhase='idle'; wgDeadline=null;
+  }
 </script>
 </body>
 </html>
