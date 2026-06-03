@@ -241,6 +241,17 @@
 
     .lobby-error { padding: .75rem 1rem; background: rgba(255,107,157,.1); border: 1px solid rgba(255,107,157,.3); border-radius: 10px; color: var(--pink); font-size: .85rem; text-align: center; }
 
+    /* ── Nickname input ── */
+    .nick-label { display: block; font-size: .72rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; margin-bottom: .45rem; }
+    .nick-input {
+      width: 100%; padding: .7rem 1rem;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+      color: var(--text); font-size: .95rem; outline: none; transition: border-color .15s;
+    }
+    .nick-input::placeholder { color: var(--muted); }
+    .nick-input:focus { border-color: rgba(124,111,255,.5); }
+    .lobby-sep { height: 1px; background: var(--border); margin: .2rem 0; }
+
     /* ── Screen: Game ── */
     #caro-wrap {
       flex-direction: row; align-items: center; justify-content: center;
@@ -459,6 +470,12 @@
       <!-- Create / join forms -->
       <div id="lobby-forms">
         <div style="display:flex;flex-direction:column;gap:.9rem;">
+          <div>
+            <label class="nick-label" for="nick-input">Tên của bạn</label>
+            <input id="nick-input" class="nick-input" placeholder="VD: Tuấn, An, Minh..." maxlength="20"
+                   onkeydown="if(event.key==='Enter')createRoom()">
+          </div>
+          <div class="lobby-sep"></div>
           <button class="lobby-create-btn" onclick="createRoom()">➕ &nbsp;Tạo phòng mới</button>
           <div class="lobby-divider">hoặc vào phòng có sẵn</div>
           <div class="lobby-join-row">
@@ -551,11 +568,12 @@
   let over    = false;
 
   // ── Multiplayer state ──────────────────────────────────────────────────
-  let mpMode   = false;
-  let myRole   = null;   // 'X' | 'O' | 'spectator'
-  let myToken  = null;
-  let roomCode = null;
-  let evtSrc   = null;
+  let mpMode    = false;
+  let myRole    = null;   // 'X' | 'O' | 'spectator'
+  let myToken   = null;
+  let roomCode  = null;
+  let evtSrc    = null;
+  let nicknames = { X: '', O: '' }; // display names for both players
 
   // ── DOM refs ───────────────────────────────────────────────────────────
   let boardEl, statusEl, cardX, cardO;
@@ -618,11 +636,12 @@
 
   function showLobby() {
     showScreen('screen-lobby');
-    $('lobby-forms').style.display  = 'block';
+    $('lobby-forms').style.display   = 'block';
     $('lobby-waiting').style.display = 'none';
     $('lobby-error').style.display   = 'none';
     $('code-input').value = '';
     $('overlay-title').textContent = 'Phòng chơi — WiFi';
+    setTimeout(() => $('nick-input').focus(), 80);
   }
 
   // ════════════════════════════════════════════
@@ -630,16 +649,18 @@
   // ════════════════════════════════════════════
   async function createRoom() {
     hideLobbyError();
+    const myNick = ($('nick-input').value || '').trim();
     try {
-      const res  = await fetch('/api/room', {
+      const res = await fetch('/api/room', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ size: SIZE }),
+        body: JSON.stringify({ size: SIZE, nickname: myNick }),
       });
       if (!res.ok) throw new Error();
       const data = await res.json();
 
       roomCode = data.code; myToken = data.token; myRole = 'X';
+      nicknames.X = myNick;
       sessionStorage.setItem('gz-token-' + roomCode, myToken);
 
       $('room-code-display').textContent = roomCode;
@@ -653,15 +674,16 @@
 
   async function joinRoomAction() {
     hideLobbyError();
-    const code = ($('code-input').value || '').trim().toUpperCase();
+    const code   = ($('code-input').value || '').trim().toUpperCase();
     if (code.length !== 4) { showLobbyError('Mã phòng phải đủ 4 ký tự'); return; }
 
-    const saved = sessionStorage.getItem('gz-token-' + code);
+    const myNick = ($('nick-input').value || '').trim();
+    const saved  = sessionStorage.getItem('gz-token-' + code);
     try {
       const res = await fetch('/api/room/' + code, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: saved || undefined }),
+        body: JSON.stringify({ token: saved || undefined, nickname: myNick }),
       });
       if (res.status === 404) { showLobbyError('Không tìm thấy phòng. Kiểm tra lại mã!'); return; }
       if (!res.ok) throw new Error();
@@ -669,6 +691,10 @@
 
       roomCode = code; myToken = data.token; myRole = data.role;
       if (myToken) sessionStorage.setItem('gz-token-' + roomCode, myToken);
+
+      // Restore nicknames from server; overwrite own slot with local input
+      if (data.nicknames) nicknames = { ...data.nicknames };
+      if (myRole === 'O') nicknames.O = myNick;
 
       // Restore board
       SIZE    = data.size;
@@ -680,9 +706,7 @@
       syncSizeUI();
       setupSSE();
 
-      // If O joined (or spectator when O is already there), enter game
       if (myRole !== 'X' || data.oReady) enterMPGame();
-      // If X is rejoining and O isn't there yet, show waiting
       else {
         $('room-code-display').textContent = roomCode;
         $('lobby-forms').style.display   = 'none';
@@ -701,11 +725,27 @@
   function hideLobbyError() { $('lobby-error').style.display = 'none'; }
 
   function copyCode() {
-    navigator.clipboard?.writeText(roomCode).then(() => {
-      const btn = $('copy-btn');
+    const text = roomCode;
+    const btn  = $('copy-btn');
+    const done = () => {
       btn.textContent = '✅';
       setTimeout(() => { btn.textContent = '📋'; }, 2000);
-    });
+    };
+    // Fallback for non-HTTPS (local IP access)
+    const fallback = () => {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
+      document.body.appendChild(ta);
+      ta.focus(); ta.select();
+      try { document.execCommand('copy'); done(); } catch {}
+      document.body.removeChild(ta);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done).catch(fallback);
+    } else {
+      fallback();
+    }
   }
 
   // ════════════════════════════════════════════
@@ -720,13 +760,14 @@
   function closeMPConn() {
     if (evtSrc) { evtSrc.close(); evtSrc = null; }
     mpMode = false; myRole = null; myToken = null; roomCode = null;
+    nicknames = { X: '', O: '' };
   }
 
   function handleServerEvent(data) {
     if (data.type === 'connected') return;
 
     if (data.type === 'playerJoined') {
-      // O has joined — tell X to start the game
+      if (data.oNickname !== undefined) nicknames.O = data.oNickname;
       if (myRole === 'X') enterMPGame();
       return;
     }
@@ -743,8 +784,9 @@
         over = true;
         if (winLine) {
           winLine.forEach(([wr, wc]) => getCellEl(wr, wc).classList.add('win'));
-          const col2 = player === 'X' ? '#ff6b9d' : '#00d4ff';
-          statusEl.innerHTML = `<span style="color:${col2}">${player}</span> thắng! 🎉`;
+          const col2      = player === 'X' ? '#ff6b9d' : '#00d4ff';
+          const winName   = nicknames[player] || player;
+          statusEl.innerHTML = `<span style="color:${col2}">${winName}</span> thắng! 🎉`;
         } else {
           statusEl.textContent = 'Hòa! 🤝';
         }
@@ -771,20 +813,23 @@
     mpMode = true;
     ensureDOMRefs();
 
-    const badge = $('role-badge');
-    badge.style.display = 'block';
+    const badge  = $('role-badge');
     const colors = { X: '#ff6b9d', O: '#00d4ff', spectator: '#888' };
-    badge.innerHTML = myRole === 'spectator'
-      ? '<span style="color:#888">👁️ Khán giả</span>'
-      : `Bạn là <span style="color:${colors[myRole]};font-weight:900">${myRole}</span>`;
+    badge.style.display = 'block';
 
-    if (myRole === 'X') {
-      $('name-x').textContent = 'Bạn (X)';
-      $('name-o').textContent = 'Đối thủ (O)';
-    } else if (myRole === 'O') {
-      $('name-x').textContent = 'Đối thủ (X)';
-      $('name-o').textContent = 'Bạn (O)';
+    if (myRole === 'spectator') {
+      badge.innerHTML = '<span style="color:#888">👁️ Khán giả</span>';
+    } else {
+      const myName = nicknames[myRole];
+      badge.innerHTML = `Bạn là <span style="color:${colors[myRole]};font-weight:900">${myRole}</span>`
+        + (myName ? ` <span style="color:var(--muted);font-size:.82em">(${myName})</span>` : '');
     }
+
+    // Player card names
+    const xLabel = nicknames.X || 'Người chơi X';
+    const oLabel = nicknames.O || 'Người chơi O';
+    $('name-x').textContent = myRole === 'X' ? `${xLabel} (bạn)` : xLabel;
+    $('name-o').textContent = myRole === 'O' ? `${oLabel} (bạn)` : oLabel;
 
     showScreen('caro-wrap');
     $('overlay-title').textContent = `Cờ Caro — Bàn ${SIZE}×${SIZE}`;
@@ -890,8 +935,9 @@
     if (winLine) {
       over = true;
       winLine.forEach(([wr, wc]) => getCellEl(wr, wc).classList.add('win'));
-      const col = current === 'X' ? '#ff6b9d' : '#00d4ff';
-      statusEl.innerHTML = `<span style="color:${col}">${current}</span> thắng! 🎉`;
+      const col     = current === 'X' ? '#ff6b9d' : '#00d4ff';
+      const winName = nicknames[current] || current;
+      statusEl.innerHTML = `<span style="color:${col}">${winName}</span> thắng! 🎉`;
       return;
     }
     if (isDraw()) { over = true; statusEl.textContent = 'Hòa! 🤝'; return; }
@@ -927,15 +973,16 @@
 
   function updateStatus() {
     ensureDOMRefs();
-    const col = current === 'X' ? '#ff6b9d' : '#00d4ff';
+    const col         = current === 'X' ? '#ff6b9d' : '#00d4ff';
+    const currentName = nicknames[current] || current;
 
     if (mpMode && myRole !== 'spectator') {
       const mine = current === myRole;
       statusEl.innerHTML = mine
         ? `<span style="color:${col}">Lượt của bạn!</span>`
-        : `<span style="color:${col}">Chờ đối thủ...</span>`;
+        : `<span style="color:${col}">Chờ ${currentName}...</span>`;
     } else {
-      statusEl.innerHTML = `Lượt của <span style="color:${col};font-weight:900">${current}</span>`;
+      statusEl.innerHTML = `Lượt của <span style="color:${col};font-weight:900">${currentName}</span>`;
     }
 
     if (cardX) cardX.className = 'player-card' + (current === 'X' ? ' active-x' : '');
