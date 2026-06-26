@@ -5,6 +5,7 @@ const fs     = require('fs');
 const path   = require('path');
 const crypto = require('crypto');
 const os     = require('os');
+const db     = require('./db');
 
 const PORT = 3000;
 const rooms = new Map(); // code → room
@@ -466,6 +467,59 @@ const server = http.createServer(async (req, res) => {
     wgEliminate(room, code, pIdx, 'pass');
     json(200, { ok: true });
     return;
+  }
+
+  // ══════════════════════════════════════════════════════════
+  //  AUTH routes  /api/auth/…
+  // ══════════════════════════════════════════════════════════
+
+  const bearerToken = r => {
+    const h = r.headers['authorization'] || '';
+    return h.startsWith('Bearer ') ? h.slice(7) : null;
+  };
+
+  const validUsername = s => /^[a-zA-Z0-9_]{1,20}$/.test(s);
+
+  // POST /api/auth/register
+  if (p === '/api/auth/register' && m === 'POST') {
+    const { username = '', password = '' } = await parseBody(req);
+    if (!validUsername(username))
+      return json(400, { error: 'Tên đăng nhập chỉ gồm chữ, số, gạch dưới (1–20 ký tự)' });
+    if (password.length < 6 || password.length > 100)
+      return json(400, { error: 'Mật khẩu phải từ 6 ký tự trở lên' });
+    if (db.findUserByUsername(username))
+      return json(409, { error: 'Tên đăng nhập đã tồn tại' });
+    const { salt, hash } = await db.hashPassword(password);
+    const user  = db.createUser(username, salt, hash);
+    const token = db.createSession(user.id);
+    return json(200, { token, username: user.username });
+  }
+
+  // POST /api/auth/login
+  if (p === '/api/auth/login' && m === 'POST') {
+    const { username = '', password = '' } = await parseBody(req);
+    const user = db.findUserByUsername(username);
+    if (!user) return json(401, { error: 'Tên đăng nhập hoặc mật khẩu không đúng' });
+    const ok = await db.verifyPassword(password, user.salt, user.password_hash);
+    if (!ok)  return json(401, { error: 'Tên đăng nhập hoặc mật khẩu không đúng' });
+    const token = db.createSession(user.id);
+    return json(200, { token, username: user.username });
+  }
+
+  // POST /api/auth/logout
+  if (p === '/api/auth/logout' && m === 'POST') {
+    const token = bearerToken(req);
+    if (token) db.deleteSession(token);
+    return json(200, { ok: true });
+  }
+
+  // GET /api/auth/me
+  if (p === '/api/auth/me' && m === 'GET') {
+    const token = bearerToken(req);
+    if (!token) return json(401, { error: 'Chưa đăng nhập' });
+    const user = db.findSession(token);
+    if (!user)  return json(401, { error: 'Phiên đăng nhập hết hạn' });
+    return json(200, { username: user.username });
   }
 
   res.writeHead(404); res.end();

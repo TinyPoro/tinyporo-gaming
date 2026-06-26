@@ -441,6 +441,66 @@
     @keyframes fadeInUp   { from { opacity:0; transform:translateY(16px);  } to { opacity:1; transform:translateY(0); } }
     @keyframes popIn { 0% { transform:scale(.5); opacity:0; } 70% { transform:scale(1.1); } 100% { transform:scale(1); opacity:1; } }
     .pop { animation: popIn .18s cubic-bezier(.34,1.56,.64,1) both; }
+
+    /* ══════════════════════════════════════════════
+       AUTH OVERLAY
+    ══════════════════════════════════════════════ */
+    #auth-overlay {
+      position: fixed; inset: 0; z-index: 300;
+      background: rgba(11,12,26,0.92); backdrop-filter: blur(16px);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity .2s;
+    }
+    #auth-overlay.open { opacity: 1; pointer-events: all; }
+    .auth-box {
+      width: 100%; max-width: 380px;
+      background: rgba(255,255,255,.04); border: 1px solid var(--border);
+      border-radius: 24px; padding: 2rem 2rem 1.75rem;
+      display: flex; flex-direction: column; gap: 1rem;
+      box-shadow: 0 24px 60px rgba(0,0,0,.5);
+    }
+    .auth-tabs { display: flex; gap: .35rem; background: rgba(255,255,255,.04); border-radius: 12px; padding: .3rem; }
+    .auth-tab {
+      flex: 1; padding: .45rem 0; border: none; border-radius: 9px;
+      background: none; color: var(--muted); font-size: .88rem; font-weight: 700; cursor: pointer;
+      transition: background .15s, color .15s;
+    }
+    .auth-tab.active { background: rgba(124,111,255,.25); color: var(--purple); }
+    .auth-title { font-size: 1.3rem; font-weight: 800; text-align: center;
+      background: linear-gradient(135deg, #fff, var(--purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .auth-field { display: flex; flex-direction: column; gap: .4rem; }
+    .auth-field label { font-size: .72rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
+    .auth-input {
+      padding: .7rem 1rem; background: rgba(255,255,255,.06); border: 1px solid var(--border);
+      border-radius: 12px; color: var(--text); font-size: .95rem; outline: none; transition: border-color .15s;
+    }
+    .auth-input:focus { border-color: rgba(124,111,255,.5); }
+    .auth-btn {
+      padding: .85rem; background: linear-gradient(135deg, var(--purple), var(--pink));
+      border: none; border-radius: 14px; color: white; font-size: 1rem; font-weight: 700; cursor: pointer;
+      transition: opacity .2s, transform .1s; box-shadow: 0 4px 20px rgba(124,111,255,.4);
+    }
+    .auth-btn:hover { opacity: .88; transform: translateY(-1px); }
+    .auth-err { padding: .6rem 1rem; background: rgba(255,107,157,.1); border: 1px solid rgba(255,107,157,.3); border-radius: 10px; color: var(--pink); font-size: .84rem; text-align: center; display: none; }
+    .auth-close { background: none; border: none; color: var(--muted); font-size: .84rem; cursor: pointer; text-align: center; transition: color .15s; }
+    .auth-close:hover { color: var(--text); }
+
+    /* Navbar auth */
+    #auth-nav { display: flex; align-items: center; gap: .5rem; }
+    .auth-nav-user { font-size: .84rem; color: var(--muted); }
+    .auth-nav-user strong { color: var(--purple); }
+    .nav-auth-btn {
+      padding: .35rem .85rem; border-radius: 8px; font-size: .84rem; font-weight: 700; cursor: pointer;
+      border: 1px solid rgba(124,111,255,.4); background: rgba(124,111,255,.1); color: var(--purple);
+      transition: background .15s, border-color .15s;
+    }
+    .nav-auth-btn:hover { background: rgba(124,111,255,.2); border-color: rgba(124,111,255,.6); }
+    .nav-logout-btn {
+      padding: .35rem .85rem; border-radius: 8px; font-size: .84rem; font-weight: 600; cursor: pointer;
+      border: 1px solid var(--border); background: var(--surface); color: var(--muted);
+      transition: background .15s;
+    }
+    .nav-logout-btn:hover { background: rgba(255,255,255,.08); color: var(--pink); border-color: rgba(255,107,157,.3); }
   </style>
 </head>
 <body>
@@ -459,6 +519,7 @@
     <li><a href="#">Trang chủ</a></li>
     <li><a href="#">Trò chơi</a></li>
   </ul>
+  <div id="auth-nav"></div>
 </nav>
 
 <!-- ═══ HOME ═══ -->
@@ -810,7 +871,128 @@
 
 </div><!-- #wg-overlay -->
 
+<!-- ═══ AUTH OVERLAY ═══ -->
+<div id="auth-overlay" role="dialog" aria-modal="true">
+  <div class="auth-box">
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login"    onclick="authSwitchTab('login')">Đăng nhập</button>
+      <button class="auth-tab"        id="tab-register" onclick="authSwitchTab('register')">Đăng ký</button>
+    </div>
+    <div class="auth-title" id="auth-title">Đăng nhập</div>
+    <div class="auth-field">
+      <label for="auth-username">Tên đăng nhập</label>
+      <input id="auth-username" class="auth-input" type="text" placeholder="vd: tuan123" maxlength="20" autocomplete="username"
+             onkeydown="if(event.key==='Enter')authSubmit()">
+    </div>
+    <div class="auth-field">
+      <label for="auth-password">Mật khẩu</label>
+      <input id="auth-password" class="auth-input" type="password" placeholder="Tối thiểu 6 ký tự" autocomplete="current-password"
+             onkeydown="if(event.key==='Enter')authSubmit()">
+    </div>
+    <div class="auth-err" id="auth-err"></div>
+    <button class="auth-btn" onclick="authSubmit()" id="auth-submit-btn">Đăng nhập</button>
+    <button class="auth-close" onclick="closeAuthOverlay()">Đóng</button>
+  </div>
+</div>
+
 <script>
+  // ══════════════════════════════════════════════════════════
+  //  AUTH
+  // ══════════════════════════════════════════════════════════
+  let authUser   = null;
+  let authTabVal = 'login';
+  const AUTH_KEY = 'gz-auth-token';
+
+  async function authInit() {
+    const token = localStorage.getItem(AUTH_KEY);
+    if (!token) { renderAuthNav(); return; }
+    const res = await fetch('/api/auth/me', { headers: { Authorization: 'Bearer ' + token } }).catch(() => null);
+    if (res?.ok) { authUser = (await res.json()).username; }
+    else         { localStorage.removeItem(AUTH_KEY); }
+    renderAuthNav();
+  }
+
+  function renderAuthNav() {
+    const el = $('auth-nav'); if (!el) return;
+    if (authUser) {
+      el.innerHTML =
+        `<span class="auth-nav-user">Xin chào, <strong>${authUser}</strong></span>` +
+        `<button class="nav-logout-btn" onclick="authLogout()">Đăng xuất</button>`;
+    } else {
+      el.innerHTML = `<button class="nav-auth-btn" onclick="openAuthOverlay()">Đăng nhập</button>`;
+    }
+  }
+
+  function openAuthOverlay() {
+    authSwitchTab('login');
+    $('auth-err').style.display = 'none';
+    $('auth-username').value = '';
+    $('auth-password').value = '';
+    $('auth-overlay').classList.add('open');
+    setTimeout(() => $('auth-username').focus(), 80);
+  }
+
+  function closeAuthOverlay() {
+    $('auth-overlay').classList.remove('open');
+  }
+
+  function authSwitchTab(tab) {
+    authTabVal = tab;
+    const isLogin = tab === 'login';
+    $('tab-login').classList.toggle('active', isLogin);
+    $('tab-register').classList.toggle('active', !isLogin);
+    $('auth-title').textContent      = isLogin ? 'Đăng nhập' : 'Đăng ký tài khoản';
+    $('auth-submit-btn').textContent = isLogin ? 'Đăng nhập' : 'Tạo tài khoản';
+    $('auth-err').style.display = 'none';
+  }
+
+  async function authSubmit() {
+    const username = ($('auth-username').value || '').trim();
+    const password = ($('auth-password').value || '');
+    $('auth-err').style.display = 'none';
+
+    const endpoint = authTabVal === 'login' ? '/api/auth/login' : '/api/auth/register';
+    let res, data;
+    try {
+      res  = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
+      data = await res.json();
+    } catch {
+      return authShowErr('Không thể kết nối server');
+    }
+    if (!res.ok) return authShowErr(data.error || 'Có lỗi xảy ra');
+
+    localStorage.setItem(AUTH_KEY, data.token);
+    authUser = data.username;
+    renderAuthNav();
+    closeAuthOverlay();
+    prefillNicknames();
+  }
+
+  function authShowErr(msg) {
+    const e = $('auth-err'); e.textContent = msg; e.style.display = 'block';
+  }
+
+  async function authLogout() {
+    const token = localStorage.getItem(AUTH_KEY);
+    if (token) fetch('/api/auth/logout', { method: 'POST', headers: { Authorization: 'Bearer ' + token } });
+    localStorage.removeItem(AUTH_KEY); authUser = null; renderAuthNav();
+  }
+
+  function prefillNicknames() {
+    if (!authUser) return;
+    const ni = $('nick-input');   if (ni && !ni.value) ni.value = authUser;
+    const wn = $('wg-nick');      if (wn && !wn.value) wn.value = authUser;
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    authInit().then(prefillNicknames);
+    $('auth-overlay').addEventListener('click', e => { if (e.target === $('auth-overlay')) closeAuthOverlay(); });
+  });
+
   // ── Constants ──────────────────────────────────────────────────────────
   const WIN_LEN = 5;
 
@@ -894,6 +1076,7 @@
     $('lobby-error').style.display   = 'none';
     $('code-input').value = '';
     $('overlay-title').textContent = 'Phòng chơi — WiFi';
+    prefillNicknames();
     setTimeout(() => $('nick-input').focus(), 80);
   }
 
@@ -1404,6 +1587,7 @@
     $('wg-lobby-wait').style.display  = 'none';
     $('wg-lobby-err').style.display   = 'none';
     $('wg-code-in').value = '';
+    prefillNicknames();
     setTimeout(() => $('wg-nick')?.focus(), 80);
   }
   function wgSetMax(n) {
