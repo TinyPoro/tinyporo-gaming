@@ -25,6 +25,13 @@ db.exec(`
     user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     created_at INTEGER NOT NULL
   );
+
+  CREATE TABLE IF NOT EXISTS snake_scores (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    player_name TEXT    NOT NULL,
+    score       INTEGER NOT NULL,
+    created_at  INTEGER NOT NULL
+  );
 `);
 
 // ── Password helpers ──────────────────────────────────────────────────────────
@@ -54,6 +61,8 @@ const stmts = {
     'SELECT u.id, u.username FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token = ?'
   ),
   deleteSession:  db.prepare('DELETE FROM sessions WHERE token = ?'),
+  topScores:      db.prepare('SELECT player_name, score, created_at FROM snake_scores ORDER BY score DESC, created_at ASC LIMIT 10'),
+  insertScore:    db.prepare('INSERT INTO snake_scores (player_name, score, created_at) VALUES (?, ?, ?)'),
 };
 
 function findUserByUsername(username) {
@@ -78,4 +87,13 @@ function deleteSession(token) {
   stmts.deleteSession.run(token);
 }
 
-module.exports = { hashPassword, verifyPassword, findUserByUsername, createUser, createSession, findSession, deleteSession };
+function getLeaderboard() {
+  return stmts.topScores.all();
+}
+
+function saveScore(playerName, score) {
+  stmts.insertScore.run(playerName, score, Date.now());
+  return stmts.topScores.all();
+}
+
+module.exports = { hashPassword, verifyPassword, findUserByUsername, createUser, createSession, findSession, deleteSession, getLeaderboard, saveScore };

@@ -1,4 +1,6 @@
 .idea
+.claude
 CLAUDE.
 
 node_modules
+game.db
